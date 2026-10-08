@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Survival 5M - Desafío de 5 Minutos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #050814;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glowing text & box effects */
+        .glow-cyan {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .glow-red {
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.7), 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+        .glow-gold {
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.7), 0 0 20px rgba(234, 179, 8, 0.4);
+        }
+
+        .box-glow {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.15), inset 0 0 15px rgba(6, 182, 212, 0.1);
+        }
+
+        /* Heart animation */
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .heart-pulse {
+            animation: pulse-heart 1.2s infinite ease-in-out;
+        }
+
+        /* Scanline effect overlay */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1120;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-slate-950 text-slate-100">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-4xl flex flex-wrap justify-between items-center gap-3 px-4 py-3 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl shadow-xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-xl font-bold">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron text-lg sm:text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400">
+                    CYBER SURVIVAL 5M
+                </h1>
+                <p class="text-xs text-slate-400">Supervive hasta que el contador llegue a cero</p>
+            </div>
+        </div>
+
+        <!-- Audio & Stats Toggle -->
+        <div class="flex items-center gap-2">
+            <button id="soundToggleBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-2 transition">
+                <i class="fa-solid fa-volume-high text-cyan-400" id="soundIcon"></i>
+                <span id="soundStatusText">Audio ON</span>
+            </button>
+            <button id="pauseBtn" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-2 transition hidden">
+                <i class="fa-solid fa-pause"></i>
+                <span>Pausa</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Section -->
+    <main class="w-full max-w-4xl my-2 flex flex-col items-center relative">
+        
+        <!-- Game HUD Panel -->
+        <div class="w-full bg-slate-900/90 border-t border-x border-slate-800 rounded-t-2xl p-3 sm:p-4 grid grid-cols-3 gap-2 items-center text-center">
+            
+            <!-- Vidas (Lives) -->
+            <div class="flex flex-col items-start sm:items-center pl-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-shield-halved text-rose-400"></i> Vidas (3)
+                </span>
+                <div id="livesContainer" class="flex items-center gap-1.5 mt-1">
+                    <i class="fa-solid fa-heart text-2xl text-rose-500 heart-pulse glow-red"></i>
+                    <i class="fa-solid fa-heart text-2xl text-rose-500 heart-pulse glow-red"></i>
+                    <i class="fa-solid fa-heart text-2xl text-rose-500 heart-pulse glow-red"></i>
+                </div>
+            </div>
+
+            <!-- Cuenta Atrás (5 Min Countdown Timer) -->
+            <div class="flex flex-col items-center">
+                <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400 flex items-center gap-1">
+                    <i class="fa-regular fa-clock"></i> Tiempo Restante
+                </span>
+                <div id="timerDisplay" class="font-orbitron text-2xl sm:text-4xl font-black text-cyan-300 glow-cyan tracking-wider mt-0.5">
+                    05:00
+                </div>
+            </div>
+
+            <!-- Puntuación (Score & Items) -->
+            <div class="flex flex-col items-end sm:items-center pr-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-gem text-amber-400"></i> Puntos
+                </span>
+                <div id="scoreDisplay" class="font-orbitron text-xl sm:text-2xl font-bold text-amber-400 glow-gold mt-1">
+                    0000
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Container with Scanlines & Aspect Ratio -->
+        <div class="relative w-full aspect-[4/3] max-h-[520px] bg-slate-950 border-x border-b border-slate-800 rounded-b-2xl overflow-hidden shadow-2xl box-glow">
+            
+            <!-- Canvas Object -->
+            <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+            
+            <!-- Scanline Texture -->
+            <div class="absolute inset-0 scanlines"></div>
+
+            <!-- OVERLAY: Start Game Screen -->
+            <div id="startOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-20">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-3xl mb-4 shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-crosshairs text-white"></i>
+                </div>
+                <h2 class="font-orbitron text-2xl sm:text-4xl font-black text-white mb-2">CYBER SURVIVAL</h2>
+                <p class="text-slate-300 max-w-md text-sm sm:text-base mb-6">
+                    Sobrevive los <strong class="text-cyan-400">5 minutos completos (05:00)</strong> evitando drones enemigos y recolectando orbes de energía.
+                </p>
+
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 max-w-md w-full mb-6 text-left text-xs sm:text-sm space-y-2">
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-cyan-300 font-mono text-xs">🡡 🡫 🡠 🡢</span>
+                        <span class="text-slate-300">Usa las <strong>flechas del teclado</strong> para mover la nave.</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-5 h-5 rounded-full bg-rose-500 inline-block flex-shrink-0"></span>
+                        <span class="text-slate-300">Inicias con <strong class="text-rose-400">3 Vidas</strong>. Un golpe restará 1 vida.</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-5 h-5 rounded-full bg-amber-400 inline-block flex-shrink-0"></span>
+                        <span class="text-slate-300">Recolecta gemas doradas para puntos y corazones para recuperar vida.</span>
+                    </div>
+                </div>
+
+                <button id="startGameBtn" class="px-8 py-3.5 bg-gradient-to-r from-cyan-500 via-teal-400 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 font-orbitron font-extrabold text-base rounded-xl shadow-lg shadow-cyan-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150">
+                    <i class="fa-solid fa-play mr-2"></i> INICIAR MISIÓN
+                </button>
+            </div>
+
+            <!-- OVERLAY: Game Over Screen -->
+            <div id="gameOverOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-20 hidden">
+                <div class="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-3xl text-rose-500 mb-3 glow-red">
+                    <i class="fa-solid fa-skull"></i>
+                </div>
+                <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-rose-500 mb-1 glow-red">MISIÓN FALLIDA</h2>
+                <p class="text-slate-400 text-sm mb-4">Te has quedado sin vidas antes de completar el tiempo.</p>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 w-full max-w-xs mb-6 space-y-2 text-sm">
+                    <div class="flex justify-between text-slate-400">
+                        <span>Tiempo Sobrevivido:</span>
+                        <strong id="survivedTimeText" class="text-slate-200 font-mono">00:00</strong>
+                    </div>
+                    <div class="flex justify-between text-slate-400">
+                        <span>Puntuación Final:</span>
+                        <strong id="finalScoreText" class="text-amber-400 font-mono">0</strong>
+                    </div>
+                </div>
+
+                <button id="restartGameBtn" class="px-7 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 font-orbitron font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> REINTENTAR
+                </button>
+            </div>
+
+            <!-- OVERLAY: Victory Screen -->
+            <div id="victoryOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-20 hidden">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-3xl text-emerald-400 mb-3">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-emerald-400 mb-1">¡VICTORIA TOTAL!</h2>
+                <p class="text-slate-300 text-sm mb-4">Has resistido los 5 minutos completos con éxito.</p>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 w-full max-w-xs mb-6 space-y-2 text-sm">
+                    <div class="flex justify-between text-slate-400">
+                        <span>Vidas Restantes:</span>
+                        <strong id="victoryLivesText" class="text-rose-400 font-mono">3 / 3</strong>
+                    </div>
+                    <div class="flex justify-between text-slate-400">
+                        <span>Puntuación Total:</span>
+                        <strong id="victoryScoreText" class="text-amber-400 font-mono">0</strong>
+                    </div>
+                </div>
+
+                <button id="playAgainBtn" class="px-7 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-orbitron font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> JUGAR DE NUEVO
+                </button>
+            </div>
+
+            <!-- OVERLAY: Pause Screen -->
+            <div id="pauseOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center z-20 hidden">
+                <h2 class="font-orbitron text-3xl font-black text-amber-400 mb-4">JUEGO EN PAUSA</h2>
+                <button id="resumeBtn" class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-bold rounded-xl shadow-lg transition">
+                    CONTINUAR
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Controls Guide & On-Screen Touch D-Pad for Compatibility -->
+    <footer class="w-full max-w-4xl mt-2 bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-400">
+        
+        <div class="flex items-center gap-3">
+            <span class="font-semibold text-slate-300">Controles PC:</span>
+            <div class="flex items-center gap-1 font-mono">
+                <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-cyan-300">↑</span>
+                <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-cyan-300">↓</span>
+                <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-cyan-300">←</span>
+                <span class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-cyan-300">→</span>
+            </div>
+            <span class="hidden sm:inline text-slate-500">Mueve tu nave libremente por el mapa</span>
+        </div>
+
+        <!-- Visual Touch Pad (Optional for mobile/touch screens) -->
+        <div id="touchControls" class="flex gap-2 items-center sm:hidden">
+            <button id="btnUp" class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg active:bg-cyan-600 flex items-center justify-center text-slate-200">↑</button>
+            <div class="flex flex-col gap-1">
+                <div class="flex gap-1">
+                    <button id="btnLeft" class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg active:bg-cyan-600 flex items-center justify-center text-slate-200">←</button>
+                    <button id="btnDown" class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg active:bg-cyan-600 flex items-center justify-center text-slate-200">↓</button>
+                    <button id="btnRight" class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg active:bg-cyan-600 flex items-center justify-center text-slate-200">→</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- AUDIO SYNTHESIZER (Web Audio API - Standalone Sound Effects) ---
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playCollect() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12); // A5
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playHit() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playHeal() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(329.63, this.ctx.currentTime); // E4
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime + 0.08); // C5
+                osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.16); // E5
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playGameOver() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.6);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.6);
+            }
+
+            playWin() {
+                if (!this.enabled || !this.ctx) return;
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + index * 0.1);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + index * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + index * 0.1 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + index * 0.1);
+                    osc.stop(this.ctx.currentTime + index * 0.1 + 0.2);
+                });
+            }
+        }
+
+        const audio = new SoundFX();
+
+        // --- GAME ENGINE SETUP ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Target Resolution
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        // Constants
+        const TOTAL_TIME_SECONDS = 300; // 5 minutos = 300 segundos
+        const MAX_LIVES = 3;
+
+        // Game State Variables
+        let gameState = 'START'; // START, PLAYING, PAUSED, GAMEOVER, VICTORY
+        let lives = MAX_LIVES;
+        let score = 0;
+        let timeRemaining = TOTAL_TIME_SECONDS;
+        let lastTimestamp = 0;
+        let timerInterval = null;
+
+        // Key states for Keyboard Movement
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        // --- PLAYER OBJECT ---
+        const player = {
+            x: CANVAS_WIDTH / 2,
+            y: CANVAS_HEIGHT / 2,
+            radius: 14,
+            speed: 4.5,
+            vx: 0,
+            vy: 0,
+            invulnerableTimer: 0, // Frame duration when hit
+            trail: [],
+
+            reset() {
+                this.x = CANVAS_WIDTH / 2;
+                this.y = CANVAS_HEIGHT / 2;
+                this.vx = 0;
+                this.vy = 0;
+                this.invulnerableTimer = 0;
+                this.trail = [];
+            },
+
+            update() {
+                // Direction calculation
+                let dx = 0;
+                let dy = 0;
+
+                if (keys.ArrowUp) dy -= 1;
+                if (keys.ArrowDown) dy += 1;
+                if (keys.ArrowLeft) dx -= 1;
+                if (keys.ArrowRight) dx += 1;
+
+                // Normalize diagonal speed
+                if (dx !== 0 && dy !== 0) {
+                    dx *= 0.7071;
+                    dy *= 0.7071;
+                }
+
+                this.x += dx * this.speed;
+                this.y += dy * this.speed;
+
+                // Keep player within bounds
+                this.x = Math.max(this.radius, Math.min(CANVAS_WIDTH - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(CANVAS_HEIGHT - this.radius, this.y));
+
+                // Trail effect
+                this.trail.push({ x: this.x, y: this.y, alpha: 0.6 });
+                if (this.trail.length > 8) this.trail.shift();
+                this.trail.forEach(t => t.alpha -= 0.07);
+
+                // Invulnerability countdown
+                if (this.invulnerableTimer > 0) {
+                    this.invulnerableTimer--;
+                }
+            },
+
+            draw() {
+                // Draw trail
+                this.trail.forEach(t => {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, this.radius * 0.7, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(6, 182, 212, ${Math.max(0, t.alpha)})`;
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // Blink when hit/invulnerable
+                if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 4) % 2 === 0) {
+                    return;
+                }
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Outer Glowing Aura
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius + 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+                ctx.fill();
+
+                // Player Body (Cyber Craft)
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#06b6d4';
+                ctx.shadowColor = '#06b6d4';
+                ctx.shadowBlur = 12;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                // Core Light
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                ctx.restore();
+            }
+        };
+
+        // Entities Arrays
+        let enemies = [];
+        let collectibles = [];
+        let particles = [];
+
+        // --- ENEMY CLASSES ---
+        class BouncingDrone {
+            constructor() {
+                this.radius = 12 + Math.random() * 6;
+                // Spawn on random edge
+                if (Math.random() < 0.5) {
+                    this.x = Math.random() < 0.5 ? 0 - this.radius : CANVAS_WIDTH + this.radius;
+                    this.y = Math.random() * CANVAS_HEIGHT;
+                } else {
+                    this.x = Math.random() * CANVAS_WIDTH;
+                    this.y = Math.random() < 0.5 ? 0 - this.radius : CANVAS_HEIGHT + this.radius;
+                }
+
+                const speed = 2 + Math.random() * 2;
+                const angle = Math.random() * Math.PI * 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.color = '#ef4444';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce on walls
+                if (this.x - this.radius <= 0 || this.x + this.radius >= CANVAS_WIDTH) {
+                    this.vx *= -1;
+                }
+                if (this.y - this.radius <= 0 || this.y + this.radius >= CANVAS_HEIGHT) {
+                    this.vy *= -1;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#fca5a5';
+                ctx.stroke();
+
+                // Inner detail
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class ChaserDrone {
+            constructor() {
+                this.radius = 10;
+                this.x = Math.random() < 0.5 ? 20 : CANVAS_WIDTH - 20;
+                this.y = Math.random() < 0.5 ? 20 : CANVAS_HEIGHT - 20;
+                this.speed = 1.6;
+                this.color = '#a855f7';
+            }
+
+            update() {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.x += Math.cos(angle) * this.speed;
+                this.y += Math.sin(angle) * this.speed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = '#a855f7';
+                ctx.shadowBlur = 12;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#f0abfc';
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // --- COLLECTIBLES CLASS ---
+        class Collectible {
+            constructor(type = 'gem') {
+                this.type = type; // 'gem' or 'heart'
+                this.radius = type === 'heart' ? 10 : 8;
+                this.x = 40 + Math.random() * (CANVAS_WIDTH - 80);
+                this.y = 40 + Math.random() * (CANVAS_HEIGHT - 80);
+                this.pulse = 0;
+            }
+
+            draw() {
+                this.pulse += 0.08;
+                const currentRadius = this.radius + Math.sin(this.pulse) * 2;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, Math.max(2, currentRadius), 0, Math.PI * 2);
+
+                if (this.type === 'gem') {
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (this.type === 'heart') {
+                    ctx.fillStyle = '#f43f5e';
+                    ctx.shadowColor = '#f43f5e';
+                    ctx.shadowBlur = 12;
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffe4e6';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // --- PARTICLE EXPLOSION EFFECT ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 2 + Math.random() * 3;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 4;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = 0.02 + Math.random() * 0.03;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createExplosion(x, y, color, count = 15) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // --- UI & HUD RENDERING ---
+        function updateHUD() {
+            // Update Timer Text
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = formattedTime;
+
+            // Update Score Text
+            document.getElementById('scoreDisplay').textContent = String(score).padStart(4, '0');
+
+            // Update Lives Container
+            const livesContainer = document.getElementById('livesContainer');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const heartIcon = document.createElement('i');
+                if (i < lives) {
+                    heartIcon.className = 'fa-solid fa-heart text-2xl text-rose-500 heart-pulse glow-red';
+                } else {
+                    heartIcon.className = 'fa-regular fa-heart text-2xl text-slate-700';
+                }
+                livesContainer.appendChild(heartIcon);
+            }
+        }
+
+        // --- GAME LOOP & UPDATES ---
+        function spawnEnemiesLogic() {
+            // Scale difficulty based on elapsed time
+            const elapsedTime = TOTAL_TIME_SECONDS - timeRemaining;
+            const targetEnemyCount = 4 + Math.floor(elapsedTime / 25); // Increases every 25 seconds
+
+            if (enemies.length < targetEnemyCount) {
+                if (Math.random() < 0.7) {
+                    enemies.push(new BouncingDrone());
+                } else {
+                    enemies.push(new ChaserDrone());
+                }
+            }
+
+            // Spawn Collectibles periodically
+            if (collectibles.length < 3 && Math.random() < 0.02) {
+                // 15% chance for heart if lives < MAX_LIVES
+                if (lives < MAX_LIVES && Math.random() < 0.2) {
+                    collectibles.push(new Collectible('heart'));
+                } else {
+                    collectibles.push(new Collectible('gem'));
+                }
+            }
+        }
+
+        function checkCollisions() {
+            // Player vs Enemies
+            if (player.invulnerableTimer === 0) {
+                for (let i = 0; i < enemies.length; i++) {
+                    const enemy = enemies[i];
+                    const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+
+                    if (dist < player.radius + enemy.radius) {
+                        // HIT!
+                        lives--;
+                        player.invulnerableTimer = 90; // ~1.5 seconds of invulnerability (60fps)
+                        createExplosion(player.x, player.y, '#ef4444', 25);
+                        audio.playHit();
+                        updateHUD();
+
+                        if (lives <= 0) {
+                            triggerGameOver();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Player vs Collectibles
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                const item = collectibles[i];
+                const dist = Math.hypot(player.x - item.x, player.y - item.y);
+
+                if (dist < player.radius + item.radius) {
+                    if (item.type === 'gem') {
+                        score += 100;
+                        createExplosion(item.x, item.y, '#f59e0b', 12);
+                        audio.playCollect();
+                    } else if (item.type === 'heart') {
+                        if (lives < MAX_LIVES) {
+                            lives++;
+                            createExplosion(item.x, item.y, '#f43f5e', 15);
+                            audio.playHeal();
+                        }
+                    }
+                    collectibles.splice(i, 1);
+                    updateHUD();
+                }
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (gameState !== 'PLAYING') return;
+
+            // Clear Background
+            ctx.fillStyle = '#050814';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            // Draw Background Grid
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < CANVAS_WIDTH; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, CANVAS_HEIGHT);
+                ctx.stroke();
+            }
+            for (let y = 0; y < CANVAS_HEIGHT; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(CANVAS_WIDTH, y);
+                ctx.stroke();
+            }
+
+            // Spawning Logic
+            spawnEnemiesLogic();
+
+            // Update & Render Collectibles
+            collectibles.forEach(item => item.draw());
+
+            // Update & Render Enemies
+            enemies.forEach(enemy => {
+                enemy.update();
+                enemy.draw();
+            });
+
+            // Update & Render Player
+            player.update();
+            player.draw();
+
+            // Check Collisions
+            checkCollisions();
+
+            // Update & Render Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startCountdown() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (gameState === 'PLAYING') {
+                    timeRemaining--;
+                    updateHUD();
+
+                    if (timeRemaining <= 0) {
+                        triggerVictory();
+                    }
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            audio.init();
+            gameState = 'PLAYING';
+            lives = MAX_LIVES;
+            score = 0;
+            timeRemaining = TOTAL_TIME_SECONDS;
+            enemies = [];
+            collectibles = [];
+            particles = [];
+
+            player.reset();
+            updateHUD();
+
+            // Hide Overlays
+            document.getElementById('startOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            document.getElementById('victoryOverlay').classList.add('hidden');
+            document.getElementById('pauseOverlay').classList.add('hidden');
+            document.getElementById('pauseBtn').classList.remove('hidden');
+
+            startCountdown();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function triggerGameOver() {
+            gameState = 'GAMEOVER';
+            clearInterval(timerInterval);
+            audio.playGameOver();
+
+            const minutes = Math.floor((TOTAL_TIME_SECONDS - timeRemaining) / 60);
+            const seconds = (TOTAL_TIME_SECONDS - timeRemaining) % 60;
+            const timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            document.getElementById('survivedTimeText').textContent = timeText;
+            document.getElementById('finalScoreText').textContent = score;
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+            document.getElementById('pauseBtn').classList.add('hidden');
+        }
+
+        function triggerVictory() {
+            gameState = 'VICTORY';
+            clearInterval(timerInterval);
+            audio.playWin();
+
+            document.getElementById('victoryLivesText').textContent = `${lives} / ${MAX_LIVES}`;
+            document.getElementById('victoryScoreText').textContent = score + (lives * 500); // Bonus for lives left
+            document.getElementById('victoryOverlay').classList.remove('hidden');
+            document.getElementById('pauseBtn').classList.add('hidden');
+        }
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('pauseOverlay').classList.remove('hidden');
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('pauseOverlay').classList.add('hidden');
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // --- INPUT LISTENERS (PC Keyboard Arrow Keys) ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+                // Prevent browser page scrolling when pressing Arrow keys
+                e.preventDefault();
+            }
+            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+                if (gameState === 'PLAYING' || gameState === 'PAUSED') {
+                    togglePause();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+                e.preventDefault();
+            }
+        });
+
+        // Touch Control Bindings (Mobile/Touch compatibility)
+        function bindTouchButton(id, keyName) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const startPress = (e) => { e.preventDefault(); keys[keyName] = true; };
+            const endPress = (e) => { e.preventDefault(); keys[keyName] = false; };
+            btn.addEventListener('touchstart', startPress);
+            btn.addEventListener('touchend', endPress);
+            btn.addEventListener('mousedown', startPress);
+            btn.addEventListener('mouseup', endPress);
+            btn.addEventListener('mouseleave', endPress);
+        }
+
+        bindTouchButton('btnUp', 'ArrowUp');
+        bindTouchButton('btnDown', 'ArrowDown');
+        bindTouchButton('btnLeft', 'ArrowLeft');
+        bindTouchButton('btnRight', 'ArrowRight');
+
+        // Button Event Bindings
+        document.getElementById('startGameBtn').addEventListener('click', startGame);
+        document.getElementById('restartGameBtn').addEventListener('click', startGame);
+        document.getElementById('playAgainBtn').addEventListener('click', startGame);
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+        document.getElementById('resumeBtn').addEventListener('click', togglePause);
+
+        // Audio Toggle Button
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            audio.init();
+            audio.enabled = !audio.enabled;
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundStatusText');
+            if (audio.enabled) {
+                icon.className = 'fa-solid fa-volume-high text-cyan-400';
+                text.textContent = 'Audio ON';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+                text.textContent = 'Audio OFF';
+            }
+        });
+
+        // Initial setup render on window load
+        window.onload = () => {
+            ctx.fillStyle = '#050814';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            updateHUD();
+        };
+    </script>
+</body>
+</html>
